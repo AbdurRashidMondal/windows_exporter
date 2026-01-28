@@ -38,7 +38,7 @@ func (c *GinProcessCollector) Build(logger *slog.Logger, _ *mi.Session) error {
 			Name:      "cpu_percent",
 			Help:      "CPU utilization percent per process",
 		},
-		[]string{"pid", "name"},
+		[]string{"pid", "name", "username", "cmdline", "status"},
 	)
 
 	c.memoryMB = prometheus.NewGaugeVec(
@@ -48,7 +48,7 @@ func (c *GinProcessCollector) Build(logger *slog.Logger, _ *mi.Session) error {
 			Name:      "memory_mb",
 			Help:      "Memory usage in MB per process",
 		},
-		[]string{"pid", "name"},
+		[]string{"pid", "name", "username", "cmdline", "status"},
 	)
 
 	return nil
@@ -70,14 +70,40 @@ func (c *GinProcessCollector) Collect(ch chan<- prometheus.Metric) error {
 
 	for _, p := range procs {
 		pid := strconv.Itoa(int(p.Pid))
+
+		// Get process name
 		name, _ := p.Name()
 
-		if cpu, err := p.CPUPercent(); err == nil {
-			c.cpuPercent.WithLabelValues(pid, name).Set(cpu)
+		// Get username (may fail for system processes)
+		username, err := p.Username()
+		if err != nil {
+			username = "unknown"
 		}
 
+		// Get command line - keeping full cmdline for process identification
+		cmdline, err := p.Cmdline()
+		if err != nil {
+			cmdline = ""
+		}
+
+		// Get process status
+		status, err := p.Status()
+		if err != nil {
+			status = []string{"unknown"}
+		}
+		statusStr := ""
+		if len(status) > 0 {
+			statusStr = status[0]
+		}
+
+		// Collect CPU metric
+		if cpu, err := p.CPUPercent(); err == nil {
+			c.cpuPercent.WithLabelValues(pid, name, username, cmdline, statusStr).Set(cpu)
+		}
+
+		// Collect Memory metric
 		if mem, err := p.MemoryInfo(); err == nil {
-			c.memoryMB.WithLabelValues(pid, name).
+			c.memoryMB.WithLabelValues(pid, name, username, cmdline, statusStr).
 				Set(float64(mem.RSS) / 1024 / 1024)
 		}
 	}
