@@ -94,6 +94,7 @@ var BuildersWithFlags = map[string]BuilderWithFlags[Collector]{
 	file.Name:               NewBuilderWithFlags(file.NewWithFlags),
 	fsrmquota.Name:          NewBuilderWithFlags(fsrmquota.NewWithFlags),
 	gpu.Name:                NewBuilderWithFlags(gpu.NewWithFlags),
+	GinProcessName:          NewBuilderWithFlags(NewGinProcessWithFlags),
 	hyperv.Name:             NewBuilderWithFlags(hyperv.NewWithFlags),
 	iis.Name:                NewBuilderWithFlags(iis.NewWithFlags),
 	license.Name:            NewBuilderWithFlags(license.NewWithFlags),
