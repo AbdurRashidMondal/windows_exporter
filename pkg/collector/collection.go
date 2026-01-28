@@ -114,6 +114,7 @@ func NewWithConfig(config Config) *Collection {
 	collectors[fsrmquota.Name] = fsrmquota.New(&config.Fsrmquota)
 	collectors[gpu.Name] = gpu.New(&config.GPU)
 	collectors[GinProcessName] = NewGinProcess()
+	collectors[GinWebAppName] = NewGinWebApp()
 	collectors[hyperv.Name] = hyperv.New(&config.HyperV)
 	collectors[iis.Name] = iis.New(&config.IIS)
 	collectors[license.Name] = license.New(&config.License)
