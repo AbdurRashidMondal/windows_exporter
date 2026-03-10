@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C /d/CODE/windows_exporter log --oneline -20)"
+      "Bash(git -C /d/CODE/windows_exporter log --oneline -20)",
+      "Bash(make build)",
+      "Bash(go build ./...)",
+      "Bash(grep -v '//')",
+      "Bash(grep -o '\"\"[a-z_]*\"\",' pkg/collector/ginwebapp.go)",
+      "Bash(grep -c '\"\"dotnet_gen[0-2]_collections_total\"\"' pkg/collector/ginwebapp.go)",
+      "Bash(where promu)",
+      "Bash(go version)",
+      "Bash(go env GOPATH GOBIN)",
+      "Bash(go install github.com/prometheus/promu@latest)",
+      "Read(//c/Users/abdur.m/go/bin/**)",
+      "Bash(export PATH=\"$PATH:/c/Users/abdur.m/go/bin\")",
+      "Bash(promu build -v)"
     ]
   }
 }
