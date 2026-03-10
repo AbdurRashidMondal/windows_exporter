@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /d/CODE/windows_exporter log --oneline -20)"
+    ]
+  }
+}

@@ -24,11 +24,12 @@ type GinWebAppCollector struct {
 type aspNetValues struct {
 	Name string
 
-	RequestsSec         float64 `perfdata:"Requests/Sec"`
-	RequestsExecuting   float64 `perfdata:"Requests Executing"`
-	RequestsTotal       float64 `perfdata:"Requests Total"`
-	ErrorsTotal         float64 `perfdata:"Errors Total/Sec"`
-	OutputCacheTurnover float64 `perfdata:"Output Cache Turnover Rate"`
+	RequestsSec          float64 `perfdata:"Requests/Sec"`
+	RequestsExecuting    float64 `perfdata:"Requests Executing"`
+	RequestsTotal        float64 `perfdata:"Requests Total"`
+	ErrorsTotal          float64 `perfdata:"Errors Total/Sec"`
+	OutputCacheTurnover  float64 `perfdata:"Output Cache Turnover Rate"`
+	RequestExecutionTime float64 `perfdata:"Request Execution Time"`
 }
 
 // Process Performance Counters (filtered for w3wp)
@@ -172,6 +173,16 @@ func (c *GinWebAppCollector) Collect(ch chan<- prometheus.Metric) error {
 					),
 					prometheus.CounterValue, // Counter for totals
 					d.RequestsTotal,
+					labelName,
+				)
+				ch <- prometheus.MustNewConstMetric(
+					prometheus.NewDesc(
+						prometheus.BuildFQName("windows", "ginwebapp", "request_execution_time_ms"),
+						"Most recent request execution time in milliseconds",
+						[]string{"app_path"}, nil,
+					),
+					prometheus.GaugeValue,
+					d.RequestExecutionTime,
 					labelName,
 				)
 			}

@@ -14,8 +14,10 @@ import (
 const GinProcessName = "ginprocess"
 
 type GinProcessCollector struct {
-	cpuPercent *prometheus.GaugeVec
-	memoryMB   *prometheus.GaugeVec
+	cpuPercent    *prometheus.GaugeVec
+	memoryMB      *prometheus.GaugeVec
+	diskReadBytes *prometheus.GaugeVec
+	diskWriteBytes *prometheus.GaugeVec
 }
 
 func NewGinProcess() *GinProcessCollector {
@@ -51,6 +53,26 @@ func (c *GinProcessCollector) Build(logger *slog.Logger, _ *mi.Session) error {
 		[]string{"pid", "name", "username", "cmdline", "status"},
 	)
 
+	c.diskReadBytes = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "windows",
+			Subsystem: "ginprocess",
+			Name:      "disk_read_bytes_total",
+			Help:      "Total disk bytes read per process since start",
+		},
+		[]string{"pid", "name", "username", "cmdline", "status"},
+	)
+
+	c.diskWriteBytes = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "windows",
+			Subsystem: "ginprocess",
+			Name:      "disk_write_bytes_total",
+			Help:      "Total disk bytes written per process since start",
+		},
+		[]string{"pid", "name", "username", "cmdline", "status"},
+	)
+
 	return nil
 }
 
@@ -62,6 +84,8 @@ func (c *GinProcessCollector) Close() error {
 func (c *GinProcessCollector) Collect(ch chan<- prometheus.Metric) error {
 	c.cpuPercent.Reset()
 	c.memoryMB.Reset()
+	c.diskReadBytes.Reset()
+	c.diskWriteBytes.Reset()
 
 	procs, err := process.Processes()
 	if err != nil {
@@ -106,10 +130,20 @@ func (c *GinProcessCollector) Collect(ch chan<- prometheus.Metric) error {
 			c.memoryMB.WithLabelValues(pid, name, username, cmdline, statusStr).
 				Set(float64(mem.RSS) / 1024 / 1024)
 		}
+
+		// Collect disk I/O metrics
+		if io, err := p.IOCounters(); err == nil {
+			c.diskReadBytes.WithLabelValues(pid, name, username, cmdline, statusStr).
+				Set(float64(io.ReadBytes))
+			c.diskWriteBytes.WithLabelValues(pid, name, username, cmdline, statusStr).
+				Set(float64(io.WriteBytes))
+		}
 	}
 
 	c.cpuPercent.Collect(ch)
 	c.memoryMB.Collect(ch)
+	c.diskReadBytes.Collect(ch)
+	c.diskWriteBytes.Collect(ch)
 
 	return nil
 }
